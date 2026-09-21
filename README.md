@@ -25,4 +25,11 @@ dos usuários e das vendas.
 
 # Modelo Conceitual
 
-![Modelo Conceitual](modelo-conceitual.png)
+![Modelo Conceitual](<img width="690" height="549" alt="modelo conceitual" src="https://github.com/user-attachments/assets/1fc80387-b2c9-4a26-a793-a63b2ada0849" />
+)
+
+
+
+
+
+
