@@ -10,7 +10,7 @@ Projeto desenvolvido por:
 Site desenvolvido para a disciplina de Programação Web,
 com integração a banco de dados MySQL.
 
-# Tecnologias utilizadas
+# Utilizamos
 
 - HTML
 - CSS
