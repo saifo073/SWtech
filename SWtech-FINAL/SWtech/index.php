@@ -1,22 +1,25 @@
 <?php
 if(!isset($_SESSION)) session_start();
 
-$produtos = [
-    1 => ["nome" => "Notebook Ultra Pro 15", "preco" => 4399.00, "cat" => "notebooks", "img" => "img/n1.jpeg", "desc" => "Intel i7, 16GB RAM, SSD 512GB - Super rápido."],
-    2 => ["nome" => "Smartphone Galaxy S24 Ultra", "preco" => 5999.00, "cat" => "celulares", "img" => "img/cel1.jpeg", "desc" => "Câmera de 200MP, Tela 120Hz, 512GB."],
-    3 => ["nome" => "Fone Bluetooth Noise Cancelling", "preco" => 899.00, "cat" => "acessorios", "img" => "img/fone.jpeg", "desc" => "Isolamento acústico ativo e bateria de 40h."],
-    4 => ["nome" => "Notebook Gamer Storm X", "preco" => 6799.00, "cat" => "notebooks", "img" => "img/n2.jpeg", "desc" => "RTX 3050, Ryzen 7, Perfeito para jogos."],
-    5 => ["nome" => "iPhone 15 Pro Max", "preco" => 7899.00, "cat" => "celulares", "img" => "img/cel2.jpeg", "desc" => "Titânio, Tela Super Retina XDR, Chip A17."]
-];
+include "app/cons.php";
+require_once "app/DLL.php";
 
 $cat = isset($_POST['cat']) ? $_POST['cat'] : 'todos';
-$quantidade_carrinho = 0;
 
-if(isset($_SESSION['carrinho'])){
-    foreach($_SESSION['carrinho'] as $qtd){
-        $quantidade_carrinho += $qtd;
-    }
+if($cat === 'todos'){
+    $consulta = "SELECT * FROM produtos";
+}else{
+    $consulta = "SELECT * FROM produtos WHERE categoria = '$cat'";
 }
+
+$resultado = banco($server, $user, $password, $db, $consulta);
+
+$id_sessao = session_id();
+
+$consulta_qtd = "SELECT SUM(quantidade) AS total FROM carrinho WHERE id_sessao = '$id_sessao'";
+$resultado_qtd = banco($server, $user, $password, $db, $consulta_qtd);
+$linha_qtd = $resultado_qtd->fetch_assoc();
+$quantidade_carrinho = $linha_qtd['total'] ? $linha_qtd['total'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -74,19 +77,17 @@ if(isset($_SESSION['carrinho'])){
         <h1 class="section-title">Produtos em destaque</h1>
 
         <div class="grid-produtos">
-            <?php foreach($produtos as $id => $produto){ ?>
-                <?php if($cat === 'todos' || $cat === $produto['cat']){ ?>
-                    <form method="POST" action="detalhes.php" style="margin:0;">
-                        <input type="hidden" name="id" value="<?php echo $id; ?>">
-                        <button type="submit" class="product-card" style="width:100%; border:1px solid #e2e8f0;">
-                            <img src="<?php echo $produto['img']; ?>" alt="<?php echo $produto['nome']; ?>" onerror="this.alt='Imagem do produto';">
-                            <h3><?php echo $produto['nome']; ?></h3>
-                            <p class="desc"><?php echo $produto['desc']; ?></p>
-                            <div class="price">R$ <?php echo number_format($produto['preco'], 2, ',', '.'); ?></div>
-                            <span class="btn btn-primary">Ver detalhes</span>
-                        </button>
-                    </form>
-                <?php } ?>
+            <?php while($produto = $resultado->fetch_assoc()){ ?>
+                <form method="POST" action="detalhes.php" style="margin:0;">
+                    <input type="hidden" name="id" value="<?php echo $produto['id']; ?>">
+                    <button type="submit" class="product-card" style="width:100%; border:1px solid #e2e8f0;">
+                        <img src="<?php echo $produto['imagem']; ?>" alt="<?php echo $produto['nome']; ?>" onerror="this.alt='Imagem do produto';">
+                        <h3><?php echo $produto['nome']; ?></h3>
+                        <p class="desc"><?php echo $produto['descricao']; ?></p>
+                        <div class="price">R$ <?php echo number_format($produto['preco'], 2, ',', '.'); ?></div>
+                        <span class="btn btn-primary">Ver detalhes</span>
+                    </button>
+                </form>
             <?php } ?>
         </div>
     </main>
