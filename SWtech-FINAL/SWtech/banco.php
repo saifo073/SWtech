@@ -6,11 +6,11 @@ require_once "app/DLL.php";
 
 extract($_POST);
 
+$id_sessao = session_id();
+
 
 /* B1 - CADASTRAR USUARIO */
 if(isset($B1)){
-
-    $_SESSION['temp_cpf'] = $cpf;
 
     $consulta = "INSERT INTO usuarios
     (nome, cpf, endereco, bairro, cidade, estado, cep)
@@ -18,6 +18,12 @@ if(isset($B1)){
     ('$nome', '$cpf', '$endereco', '$bairro', '$cidade', '$estado', '$cep')";
 
     banco($server, $user, $password, $db, $consulta);
+
+    $consulta = "SELECT id FROM usuarios WHERE cpf = '$cpf'";
+    $resultado = banco($server, $user, $password, $db, $consulta);
+    $linha = $resultado->fetch_assoc();
+
+    $_SESSION['temp_id_usuario'] = $linha['id'];
 
     header('Location: cadastro2.php');
     exit();
@@ -27,22 +33,22 @@ if(isset($B1)){
 /* B2 - CADASTRAR LOGIN */
 if(isset($B2)){
 
-    if(!isset($_SESSION['temp_cpf'])){
+    if(!isset($_SESSION['temp_id_usuario'])){
         header('Location: cadastro1.php');
         exit();
     }
 
-    $cpf_vinculado = $_SESSION['temp_cpf'];
+    $id_usuario_vinculado = $_SESSION['temp_id_usuario'];
     $senha_cripto = password_hash($senha, PASSWORD_DEFAULT);
 
     $consulta = "INSERT INTO logins
-    (login, senha, cpf)
+    (login, senha, id_usuario)
     VALUES
-    ('$login', '$senha_cripto', '$cpf_vinculado')";
+    ('$login', '$senha_cripto', $id_usuario_vinculado)";
 
     banco($server, $user, $password, $db, $consulta);
 
-    unset($_SESSION['temp_cpf']);
+    unset($_SESSION['temp_id_usuario']);
 
     header('Location: login.php');
     exit();
@@ -62,9 +68,9 @@ if(isset($B3)){
         $_SESSION['Logado'] = 'ok';
         $_SESSION['Nome_Usuario'] = $login;
 
-        $cpf_vinculado = $linha['cpf'];
+        $id_usuario_vinculado = $linha['id_usuario'];
 
-        $consulta_usuario = "SELECT * FROM usuarios WHERE cpf = '$cpf_vinculado'";
+        $consulta_usuario = "SELECT * FROM usuarios WHERE id = $id_usuario_vinculado";
         $resultado_usuario = banco($server, $user, $password, $db, $consulta_usuario);
         $dados = $resultado_usuario->fetch_assoc();
 
@@ -118,7 +124,9 @@ if(isset($B4)){
 
     banco($server, $user, $password, $db, $consulta);
 
-    unset($_SESSION['carrinho']);
+    $consulta = "DELETE FROM carrinho WHERE id_sessao = '$id_sessao'";
+    banco($server, $user, $password, $db, $consulta);
+
     $_SESSION['pedido'] = $num_venda;
 
     header('Location: sucesso.php');
@@ -137,7 +145,7 @@ if(isset($B5)){
     $usuario_logado = $_SESSION['Nome_Usuario'];
 
     $consulta = "SELECT u.* FROM usuarios u
-    INNER JOIN logins l ON l.cpf = u.cpf
+    INNER JOIN logins l ON l.id_usuario = u.id
     WHERE l.login = '$usuario_logado'";
 
     $resultado = banco($server, $user, $password, $db, $consulta);
@@ -164,17 +172,18 @@ if(isset($B5)){
 /* B6 - ADICIONAR PRODUTO AO CARRINHO */
 if(isset($B6)){
 
-    if(!isset($_SESSION['carrinho'])){
-        $_SESSION['carrinho'] = [];
+    $consulta = "SELECT * FROM carrinho WHERE id_sessao = '$id_sessao' AND id_produto = $id_produto";
+    $resultado = banco($server, $user, $password, $db, $consulta);
+
+    if($resultado->num_rows > 0){
+        $consulta = "UPDATE carrinho SET quantidade = quantidade + 1
+        WHERE id_sessao = '$id_sessao' AND id_produto = $id_produto";
+    }else{
+        $consulta = "INSERT INTO carrinho (id_sessao, id_produto, quantidade)
+        VALUES ('$id_sessao', $id_produto, 1)";
     }
 
-    if(isset($id_produto)){
-        if(isset($_SESSION['carrinho'][$id_produto])){
-            $_SESSION['carrinho'][$id_produto]++;
-        }else{
-            $_SESSION['carrinho'][$id_produto] = 1;
-        }
-    }
+    banco($server, $user, $password, $db, $consulta);
 
     header('Location: carrinho.php');
     exit();
@@ -184,9 +193,8 @@ if(isset($B6)){
 /* B7 - REMOVER PRODUTO DO CARRINHO */
 if(isset($B7)){
 
-    if(isset($id_produto)){
-        unset($_SESSION['carrinho'][$id_produto]);
-    }
+    $consulta = "DELETE FROM carrinho WHERE id_sessao = '$id_sessao' AND id_produto = $id_produto";
+    banco($server, $user, $password, $db, $consulta);
 
     header('Location: carrinho.php');
     exit();
