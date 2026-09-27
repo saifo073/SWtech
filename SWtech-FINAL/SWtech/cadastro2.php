@@ -1,6 +1,6 @@
 <?php
 if(!isset($_SESSION)) session_start();
-if(!isset($_SESSION['temp_cpf'])) { header('Location: cadastro1.php'); exit(); }
+if(!isset($_SESSION['temp_id_usuario'])) { header('Location: cadastro1.php'); exit(); }
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
