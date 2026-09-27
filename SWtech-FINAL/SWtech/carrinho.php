@@ -1,16 +1,21 @@
 <?php
 if(!isset($_SESSION)) session_start();
 
-$produtos = [
-    1 => ["nome" => "Notebook Ultra Pro 15", "preco" => 4399.00, "cat" => "notebooks", "img" => "img/n1.jpeg", "desc" => "Intel i7, 16GB RAM, SSD 512GB - Super rápido."],
-    2 => ["nome" => "Smartphone Galaxy S24 Ultra", "preco" => 5999.00, "cat" => "celulares", "img" => "img/cel1.jpeg", "desc" => "Câmera de 200MP, Tela 120Hz, 512GB."],
-    3 => ["nome" => "Fone Bluetooth Noise Cancelling", "preco" => 899.00, "cat" => "acessorios", "img" => "img/fone.jpeg", "desc" => "Isolamento acústico ativo e bateria de 40h."],
-    4 => ["nome" => "Notebook Gamer Storm X", "preco" => 6799.00, "cat" => "notebooks", "img" => "img/n2.jpeg", "desc" => "RTX 3050, Ryzen 7, Perfeito para jogos."],
-    5 => ["nome" => "iPhone 15 Pro Max", "preco" => 7899.00, "cat" => "celulares", "img" => "img/cel2.jpeg", "desc" => "Titânio, Tela Super Retina XDR, Chip A17."]
-];
+include "app/cons.php";
+require_once "app/DLL.php";
 
-if(!isset($_SESSION['carrinho'])){
-    $_SESSION['carrinho'] = [];
+$id_sessao = session_id();
+
+$consulta = "SELECT c.id_produto, c.quantidade, p.nome, p.preco
+FROM carrinho c
+INNER JOIN produtos p ON p.id = c.id_produto
+WHERE c.id_sessao = '$id_sessao'";
+
+$resultado = banco($server, $user, $password, $db, $consulta);
+
+$itens_carrinho = [];
+while($linha = $resultado->fetch_assoc()){
+    $itens_carrinho[] = $linha;
 }
 
 $total = 0;
@@ -42,7 +47,7 @@ $total = 0;
     <main class="container">
         <h1 class="section-title">Meu Carrinho</h1>
 
-        <?php if(count($_SESSION['carrinho']) == 0){ ?>
+        <?php if(count($itens_carrinho) == 0){ ?>
             <div class="card-form" style="max-width:600px; margin:auto; text-align:center;">
                 <h2>Seu carrinho está vazio.</h2>
                 <form method="POST" action="index.php">
@@ -59,23 +64,21 @@ $total = 0;
                     <th>Ação</th>
                 </tr>
 
-                <?php foreach($_SESSION['carrinho'] as $id => $qtd){ ?>
-                    <?php if(isset($produtos[$id])){ ?>
-                        <?php $subtotal = $produtos[$id]['preco'] * $qtd; $total += $subtotal; ?>
-                        <tr>
-                            <td><?php echo $produtos[$id]['nome']; ?></td>
-                            <td><?php echo $qtd; ?></td>
-                            <td>R$ <?php echo number_format($produtos[$id]['preco'], 2, ',', '.'); ?></td>
-                            <td>R$ <?php echo number_format($subtotal, 2, ',', '.'); ?></td>
-                            <td>
-                                <form method="POST" action="banco.php">
-                                    <input type="hidden" name="id_produto" value="<?php echo $id; ?>">
-                                    <input type="hidden" name="B7" value="1">
-                                    <input type="submit" class="btn btn-danger" value="Remover">
-                                </form>
-                            </td>
-                        </tr>
-                    <?php } ?>
+                <?php foreach($itens_carrinho as $item){ ?>
+                    <?php $subtotal = $item['preco'] * $item['quantidade']; $total += $subtotal; ?>
+                    <tr>
+                        <td><?php echo $item['nome']; ?></td>
+                        <td><?php echo $item['quantidade']; ?></td>
+                        <td>R$ <?php echo number_format($item['preco'], 2, ',', '.'); ?></td>
+                        <td>R$ <?php echo number_format($subtotal, 2, ',', '.'); ?></td>
+                        <td>
+                            <form method="POST" action="banco.php">
+                                <input type="hidden" name="id_produto" value="<?php echo $item['id_produto']; ?>">
+                                <input type="hidden" name="B7" value="1">
+                                <input type="submit" class="btn btn-danger" value="Remover">
+                            </form>
+                        </td>
+                    </tr>
                 <?php } ?>
             </table>
 
