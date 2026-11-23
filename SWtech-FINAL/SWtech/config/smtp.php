@@ -1,6 +1,5 @@
 <?php
-// Copie este arquivo para config/smtp.php e preencha os dados do Gmail.
-// Nunca envie sua senha de aplicativo ao GitHub.
+// Use variáveis de ambiente para não publicar credenciais no GitHub.
 return [
     'host' => 'smtp.gmail.com',
     'username' => getenv('SWTECH_EMAIL') ?: 'SEU_EMAIL@gmail.com',
@@ -8,5 +7,6 @@ return [
     'port' => 587,
     'encryption' => 'tls',
     'from_email' => getenv('SWTECH_EMAIL') ?: 'SEU_EMAIL@gmail.com',
-    'from_name' => 'SWtech'
+    'from_name' => 'SWtech',
+    'base_url' => getenv('SWTECH_BASE_URL') ?: 'http://localhost/SWtech'
 ];
