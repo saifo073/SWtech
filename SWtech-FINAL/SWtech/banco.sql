@@ -1,5 +1,4 @@
-CREATE DATABASE swtech;
-
+CREATE DATABASE IF NOT EXISTS swtech;
 USE swtech;
 
 CREATE TABLE produtos (
@@ -15,6 +14,9 @@ CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cpf VARCHAR(11) NOT NULL UNIQUE,
     nome VARCHAR(100) NOT NULL,
+    email VARCHAR(254) NOT NULL UNIQUE,
+    token_verificacao CHAR(64) NULL,
+    email_verificado TINYINT(1) NOT NULL DEFAULT 0,
     endereco VARCHAR(150) NOT NULL,
     bairro VARCHAR(100) NOT NULL,
     cidade VARCHAR(100) NOT NULL,
@@ -35,18 +37,31 @@ CREATE TABLE carrinho (
     id_sessao VARCHAR(100) NOT NULL,
     id_produto INT NOT NULL,
     quantidade INT NOT NULL DEFAULT 1,
-    FOREIGN KEY (id_produto) REFERENCES produtos(id)
+    FOREIGN KEY (id_produto) REFERENCES produtos(id),
+    UNIQUE KEY uq_carrinho_sessao_produto (id_sessao, id_produto)
 );
 
 CREATE TABLE vendas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     numero_venda INT NOT NULL,
     usuario VARCHAR(50) NOT NULL,
+    id_usuario INT NOT NULL,
     descricao_itens TEXT NOT NULL,
     data_hora DATETIME NOT NULL,
     total_venda DECIMAL(10,2) NOT NULL,
     forma_pagamento VARCHAR(50) NOT NULL,
-    parcelas VARCHAR(50)
+    parcelas VARCHAR(50),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+);
+
+CREATE TABLE itens_venda (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_venda INT NOT NULL,
+    id_produto INT NOT NULL,
+    quantidade INT NOT NULL,
+    preco_unitario DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_venda) REFERENCES vendas(id),
+    FOREIGN KEY (id_produto) REFERENCES produtos(id)
 );
 
 INSERT INTO produtos (nome, preco, categoria, imagem, descricao) VALUES
