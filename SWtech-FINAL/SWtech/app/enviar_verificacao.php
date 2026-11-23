@@ -2,14 +2,11 @@
 function enviarVerificacao($destinatario, $nome, $token){
     $config = require __DIR__ . '/../config/smtp.php';
     $autoload = __DIR__ . '/../vendor/autoload.php';
-    if(!file_exists($autoload)){
-        return false;
-    }
+    if(!file_exists($autoload)){ error_log('PHPMailer não instalado. Execute composer install.'); return false; }
     require_once $autoload;
 
-    $link = 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/verificar_email.php?token=' . urlencode($token);
+    $link = rtrim($config['base_url'], '/') . '/verificar_email.php?token=' . urlencode($token);
     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-
     try{
         $mail->isSMTP();
         $mail->Host = $config['host'];
